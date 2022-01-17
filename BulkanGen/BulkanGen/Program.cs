@@ -27,6 +27,9 @@ namespace BulkanGen
 
                 foreach (var constant in vulkanVersion.Constants)
                 {
+                    if (constant.Value == null)
+                        continue;
+
                     if (constant.Alias != null)
                     {
                         var refConstant = vulkanVersion.Constants.FirstOrDefault(c => c.Name == constant.Alias);
@@ -98,7 +101,7 @@ namespace BulkanGen
                     //    file.WriteLine("\t[Flags]");
 
                     file.WriteLine($"\t[AllowDuplicates]");
-                    file.WriteLine($"\tpublic enum {Helpers.GetPrettyEnumName(e.Name)} : {(Helpers.GetPrettyEnumName(e.Name).Equals("VkResult") || Helpers.GetPrettyEnumName(e.Name).Equals("VkQueryResultStatusKHR") ? "int32" : "uint32")}");
+                    file.WriteLine($"\tpublic enum {Helpers.GetPrettyEnumName(e.Name)} : {(Helpers.GetPrettyEnumName(e.Name).Equals("VkResult") || Helpers.GetPrettyEnumName(e.Name).Equals("VkFormatFeatureFlags2KHR") || Helpers.GetPrettyEnumName(e.Name).Equals("VkQueryResultStatusKHR") ? "int32" : "uint32")}");
                     file.WriteLine("\t{");
 
                     if (!(e.Values.Exists(v => v.Value == 0)))

@@ -21,7 +21,7 @@ namespace BulkanGen
 
         public static ConstantType ParseType(string value)
         {
-            if (value.StartsWith('"'))
+            if (value == null || value.StartsWith('"'))
             {
                 return ConstantType.String;
             }

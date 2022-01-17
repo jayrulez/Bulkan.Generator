@@ -67,6 +67,11 @@ namespace BulkanGen
                     continue;
                 }
 
+                if (extension.Name == "VK_NV_shading_rate_image")
+                {
+                    var x = 1;
+                }
+
                 // Add Constant
                 foreach (var constantType in extension.Constants)
                 {
@@ -83,18 +88,20 @@ namespace BulkanGen
                 // Extend Enums
                 foreach (var enumType in extension.Enums)
                 {
-                    if (enumType.Extends != null & enumType.Alias == null)
+                    if (enumType.Extends != null)
                     {
                         string name = enumType.Extends;
                         var enumDefinition = spec.Enums.Find(c => c.Name == name);
 
-
-                        if (!enumDefinition.Values.Exists(e => e.Name == enumType.Name))
+                        if (enumType.Alias == null)
                         {
-                            EnumValue newValue = new EnumValue();
-                            newValue.Name = enumType.Name;
-                            newValue.Value = int.Parse(enumType.Value);
-                            enumDefinition.Values.Add(newValue);
+                            if (!enumDefinition.Values.Exists(e => e.Name == enumType.Name))
+                            {
+                                EnumValue newValue = new EnumValue();
+                                newValue.Name = enumType.Name;
+                                newValue.Value = int.Parse(enumType.Value);
+                                enumDefinition.Values.Add(newValue);
+                            }
                         }
                     }
                 }
