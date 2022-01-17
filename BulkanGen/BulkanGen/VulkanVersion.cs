@@ -88,20 +88,18 @@ namespace BulkanGen
                 // Extend Enums
                 foreach (var enumType in extension.Enums)
                 {
-                    if (enumType.Extends != null)
+                    if (enumType.Extends != null & enumType.Alias == null)
                     {
                         string name = enumType.Extends;
                         var enumDefinition = spec.Enums.Find(c => c.Name == name);
 
-                        if (enumType.Alias == null)
+
+                        if (!enumDefinition.Values.Exists(e => e.Name == enumType.Name))
                         {
-                            if (!enumDefinition.Values.Exists(e => e.Name == enumType.Name))
-                            {
-                                EnumValue newValue = new EnumValue();
-                                newValue.Name = enumType.Name;
-                                newValue.Value = int.Parse(enumType.Value);
-                                enumDefinition.Values.Add(newValue);
-                            }
+                            EnumValue newValue = new EnumValue();
+                            newValue.Name = enumType.Name;
+                            newValue.Value = int.Parse(enumType.Value);
+                            enumDefinition.Values.Add(newValue);
                         }
                     }
                 }

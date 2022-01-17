@@ -27,9 +27,6 @@ namespace BulkanGen
 
                 foreach (var constant in vulkanVersion.Constants)
                 {
-                    if (constant.Value == null)
-                        continue;
-
                     if (constant.Alias != null)
                     {
                         var refConstant = vulkanVersion.Constants.FirstOrDefault(c => c.Name == constant.Alias);
