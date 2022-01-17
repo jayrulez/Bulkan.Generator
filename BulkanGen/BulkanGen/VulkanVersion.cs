@@ -67,11 +67,6 @@ namespace BulkanGen
                     continue;
                 }
 
-                if (extension.Name == "VK_NV_shading_rate_image")
-                {
-                    var x = 1;
-                }
-
                 // Add Constant
                 foreach (var constantType in extension.Constants)
                 {
