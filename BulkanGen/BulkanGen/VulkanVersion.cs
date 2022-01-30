@@ -75,7 +75,13 @@ namespace BulkanGen
                         ConstantDefinition newConstant = new ConstantDefinition();
                         newConstant.Name = constantType.Name;
                         newConstant.Value = constantType.Value;
-                        newConstant.Type = ConstantDefinition.ParseType(constantType.Value);
+                        newConstant.Alias = constantType.Alias;
+
+                        if (constantType.Value != null)
+                        {
+                            newConstant.Type = ConstantDefinition.ParseType(constantType.Value);
+                        }
+
                         version.Constants.Add(newConstant);
                     }
                 }

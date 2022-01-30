@@ -96,9 +96,16 @@ namespace BulkanGen
                 {
                     //if (e.Type == EnumType.Bitmask)
                     //    file.WriteLine("\t[Flags]");
-
                     file.WriteLine($"\t[AllowDuplicates]");
-                    file.WriteLine($"\tpublic enum {Helpers.GetPrettyEnumName(e.Name)} : {(Helpers.GetPrettyEnumName(e.Name).Equals("VkResult") || Helpers.GetPrettyEnumName(e.Name).Equals("VkFormatFeatureFlags2KHR") || Helpers.GetPrettyEnumName(e.Name).Equals("VkQueryResultStatusKHR") ? "int32" : "uint32")}");
+                    string underlyingType = "uint32";
+                    if (Helpers.GetPrettyEnumName(e.Name).Equals("VkResult") 
+                        || Helpers.GetPrettyEnumName(e.Name).Equals("VkFormatFeatureFlags2") 
+                        || Helpers.GetPrettyEnumName(e.Name).Equals("VkFormatFeatureFlags2KHR") 
+                        || Helpers.GetPrettyEnumName(e.Name).Equals("VkQueryResultStatusKHR"))
+                    {
+                        underlyingType = "int32";
+                    }
+                    file.WriteLine($"\tpublic enum {Helpers.GetPrettyEnumName(e.Name)} : {underlyingType}");
                     file.WriteLine("\t{");
 
                     if (!(e.Values.Exists(v => v.Value == 0)))
@@ -218,7 +225,17 @@ namespace BulkanGen
                             }
                             else
                             {
-                                int count = int.Parse(validConstant.Value);
+                                int count = 0;
+
+                                if (validConstant.Value == null)
+                                {
+                                    var alias = vulkanVersion.Constants.FirstOrDefault(c => c.Name == validConstant.Alias);
+                                    count = int.Parse(alias.Value);
+                                }
+                                else
+                                {
+                                    count = int.Parse(validConstant.Value);
+                                }
                                 file.WriteLine($"\t\tpublic {csType}[{count}] {member.Name};");
                                 /*
                                 for (int i = 0; i < count; i++)

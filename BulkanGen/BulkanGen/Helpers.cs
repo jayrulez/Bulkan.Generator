@@ -268,13 +268,11 @@ namespace BulkanGen
                 case "StdVideoEncodeH264PictureInfo":
                 case "StdVideoEncodeH264SliceHeader":
                 case "StdVideoH265ProfileIdc":
-
-                    // jayrulez
+                case "StdVideoH265VideoParameterSet":
                 case "StdVideoEncodeH265PictureInfo":
+                case "StdVideoEncodeH265SliceHeader":
                 case "StdVideoEncodeH265ReferenceInfo":
                 case "StdVideoEncodeH265ReferenceModifications":
-                case "StdVideoEncodeH265SliceHeader":
-                case "StdVideoH265VideoParameterSet":
                     return true;
                 default:
                     return false;
