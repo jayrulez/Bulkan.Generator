@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
@@ -98,9 +99,9 @@ namespace BulkanGen
                     //    file.WriteLine("\t[Flags]");
                     file.WriteLine($"\t[AllowDuplicates]");
                     string underlyingType = "uint32";
-                    if (Helpers.GetPrettyEnumName(e.Name).Equals("VkResult") 
-                        || Helpers.GetPrettyEnumName(e.Name).Equals("VkFormatFeatureFlags2") 
-                        || Helpers.GetPrettyEnumName(e.Name).Equals("VkFormatFeatureFlags2KHR") 
+                    if (Helpers.GetPrettyEnumName(e.Name).Equals("VkResult")
+                        || Helpers.GetPrettyEnumName(e.Name).Equals("VkFormatFeatureFlags2")
+                        || Helpers.GetPrettyEnumName(e.Name).Equals("VkFormatFeatureFlags2KHR")
                         || Helpers.GetPrettyEnumName(e.Name).Equals("VkQueryResultStatusKHR"))
                     {
                         underlyingType = "int32";
@@ -294,6 +295,7 @@ namespace BulkanGen
             using (StreamWriter file = File.CreateText(Path.Combine(outputPath, "Commands.bf")))
             {
                 file.WriteLine("using System;");
+                file.WriteLine("using System.Collections;");
                 file.WriteLine($"using internal {projectNamespace};");
                 //file.WriteLine("using System.Runtime.InteropServices;\n");
                 file.WriteLine($"namespace {projectNamespace}");
@@ -303,6 +305,7 @@ namespace BulkanGen
                 file.WriteLine("\tpublic extension VulkanNative");
                 file.WriteLine("\t{");
 
+                var commandDictionary = new List<string>();
                 foreach (var command in vulkanVersion.Commands)
                 {
                     string convertedType = Helpers.ConvertToBeefType(command.Prototype.Type, 0, vulkanSpec);
@@ -323,22 +326,73 @@ namespace BulkanGen
                     file.WriteLine($"\t\t[CallingConvention(VulkanNative.CallConv)]");
                     file.WriteLine($"\t\tpublic static {convertedType} {command.Prototype.Name}({command.GetParametersSignature(vulkanSpec)})");
                     file.WriteLine($"\t\t\t=> {command.Prototype.Name}_ptr({command.GetParametersSignature(vulkanSpec, useTypes: false)});\n");
+
+                    commandDictionary.Add($"\tcase \"{command.Prototype.Name}\":");
+                    commandDictionary.Add($"\t\tNativeLib.LoadFunction(\"{command.Prototype.Name}\", out {command.Prototype.Name}_ptr);");
+                    commandDictionary.Add($"\t\tbreak;");
+                    commandDictionary.Add("");
                 }
 
-                file.WriteLine($"\t\tpublic static void LoadFuncionPointers(VkInstance instance = default)");
+                file.WriteLine($"\t\tpublic static void SetInstance(VkInstance instance)");
+                file.WriteLine("\t\t{");
+                file.WriteLine("\t\t\tNativeLib.mInstance = instance;");
+                file.WriteLine("\t\t}");
+                file.WriteLine();
+
+                if (commandDictionary.Count > 0)
+                {
+                    file.WriteLine("\t\tpublic static void LoadFunction(in StringView name)");
+                    file.WriteLine("\t\t{");
+                    file.WriteLine("\t\t\tswitch (name) {");
+
+                    foreach (var commandItem in commandDictionary)
+                    {
+                        if (string.IsNullOrEmpty(commandItem))
+                            file.WriteLine();
+                        else
+                            file.WriteLine($"\t\t{commandItem}");
+                    }
+
+                    file.WriteLine($"\t\t\tdefault:");
+                    file.WriteLine($"\t\t\t\tRuntime.FatalError(scope $\"Unknown function name '{{name}}'.\");");
+                    file.WriteLine("\t\t\t}");
+                    file.WriteLine("\t\t}");
+                    file.WriteLine();
+                }
+
+                file.WriteLine($"\t\tpublic static void LoadFunctions(in Span<StringView> functions)");
+                file.WriteLine("\t\t{");
+                file.WriteLine("\t\t\tfor (var func in functions)");
+                file.WriteLine("\t\t\t{");
+                file.WriteLine("\t\t\t\tLoadFunction(func);");
+                file.WriteLine("\t\t\t}");
+                file.WriteLine("\t\t}");
+                file.WriteLine();
+
+                file.WriteLine($"\t\tpublic static void LoadAllFuncions(VkInstance instance = default, List<StringView> excludeFunctions = null)");
                 file.WriteLine("\t\t{");
                 file.WriteLine("\t\t\tif (instance != default)");
                 file.WriteLine("\t\t\t{");
                 file.WriteLine("\t\t\t\tNativeLib.mInstance = instance;");
                 file.WriteLine("\t\t\t}");
                 file.WriteLine();
-
                 foreach (var command in vulkanVersion.Commands)
                 {
-                    file.WriteLine($"\t\t\tNativeLib.LoadFunction(\"{command.Prototype.Name}\",  out {command.Prototype.Name}_ptr);");
+                    file.WriteLine($"\t\t\tif(excludeFunctions == null || !excludeFunctions.Contains(\"{command.Prototype.Name}\"))");
+                    file.WriteLine($"\t\t\t\tLoadFunction(\"{command.Prototype.Name}\");");
+                    file.WriteLine();
                 }
 
                 file.WriteLine("\t\t}");
+
+
+                file.WriteLine();
+
+                file.WriteLine($"\t\tpublic static void LoadFunction<T>(in StringView name, out T funcPtr)");
+                file.WriteLine("\t\t{");
+                file.WriteLine("\t\t\tNativeLib.LoadFunction(name, out funcPtr);");
+                file.WriteLine("\t\t}");
+
                 file.WriteLine("\t}");
                 file.WriteLine("}");
             }
