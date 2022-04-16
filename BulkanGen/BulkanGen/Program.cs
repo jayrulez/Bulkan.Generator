@@ -341,7 +341,7 @@ namespace BulkanGen
 
                 if (commandDictionary.Count > 0)
                 {
-                    file.WriteLine("\t\tpublic static void LoadFunction(in StringView name)");
+                    file.WriteLine("\t\tprivate static void LoadFunction(in StringView name)");
                     file.WriteLine("\t\t{");
                     file.WriteLine("\t\t\tswitch (name) {");
 
@@ -360,8 +360,11 @@ namespace BulkanGen
                     file.WriteLine();
                 }
 
-                file.WriteLine($"\t\tpublic static void LoadFunctions(in Span<StringView> functions)");
+                file.WriteLine($"\t\tpublic static void LoadFunctions(in Span<StringView> functions, VkInstance? instance = null)");
                 file.WriteLine("\t\t{");
+                file.WriteLine("\t\t\tif(instance != null)");
+                file.WriteLine("\t\t\t\tSetInstance(instance.Value);");
+                file.WriteLine();
                 file.WriteLine("\t\t\tfor (var func in functions)");
                 file.WriteLine("\t\t\t{");
                 file.WriteLine("\t\t\t\tLoadFunction(func);");
@@ -369,12 +372,10 @@ namespace BulkanGen
                 file.WriteLine("\t\t}");
                 file.WriteLine();
 
-                file.WriteLine($"\t\tpublic static void LoadAllFuncions(VkInstance instance = default, List<StringView> excludeFunctions = null)");
+                file.WriteLine($"\t\tprivate static void LoadAllFuncions(VkInstance? instance = null, List<StringView> excludeFunctions = null)");
                 file.WriteLine("\t\t{");
-                file.WriteLine("\t\t\tif (instance != default)");
-                file.WriteLine("\t\t\t{");
-                file.WriteLine("\t\t\t\tNativeLib.mInstance = instance;");
-                file.WriteLine("\t\t\t}");
+                file.WriteLine("\t\t\tif (instance != null)");
+                file.WriteLine("\t\t\t\tSetInstance(instance.Value);");
                 file.WriteLine();
                 foreach (var command in vulkanVersion.Commands)
                 {
