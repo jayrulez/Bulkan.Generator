@@ -328,14 +328,14 @@ namespace BulkanGen
                     file.WriteLine($"\t\t\t=> {command.Prototype.Name}_ptr({command.GetParametersSignature(vulkanSpec, useTypes: false)});\n");
 
                     commandDictionary.Add($"\tcase \"{command.Prototype.Name}\":");
-                    commandDictionary.Add($"\t\tNativeLib.LoadFunction(\"{command.Prototype.Name}\", out {command.Prototype.Name}_ptr);");
+                    commandDictionary.Add($"\t\tmNativeLib.LoadFunction(\"{command.Prototype.Name}\", out {command.Prototype.Name}_ptr);");
                     commandDictionary.Add($"\t\tbreak;");
                     commandDictionary.Add("");
                 }
 
                 file.WriteLine($"\t\tpublic static void SetInstance(VkInstance instance)");
                 file.WriteLine("\t\t{");
-                file.WriteLine("\t\t\tNativeLib.mInstance = instance;");
+                file.WriteLine("\t\t\tmNativeLib.mInstance = instance;");
                 file.WriteLine("\t\t}");
                 file.WriteLine();
 
@@ -391,7 +391,7 @@ namespace BulkanGen
 
                 file.WriteLine($"\t\tpublic static void LoadFunction<T>(in StringView name, out T funcPtr)");
                 file.WriteLine("\t\t{");
-                file.WriteLine("\t\t\tNativeLib.LoadFunction(name, out funcPtr);");
+                file.WriteLine("\t\t\tmNativeLib.LoadFunction(name, out funcPtr);");
                 file.WriteLine("\t\t}");
 
                 file.WriteLine("\t}");
