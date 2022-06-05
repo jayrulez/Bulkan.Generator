@@ -52,7 +52,7 @@ namespace BulkanGen
 
                 foreach (var func in vulkanVersion.FuncPointers)
                 {
-                    file.Write($"\ttypealias {func.Name} = function {func.Type}(");
+                    file.Write($"\tpublic typealias {func.Name} = function {func.Type}(");
                     //file.Write($"\tpublic function {func.Type} {func.Name}(");
                     if (func.Parameters.Count > 0)
                     {
@@ -314,7 +314,7 @@ namespace BulkanGen
                     //file.WriteLine($"\t\t[CallingConvention(VulkanNative.CallConv)]");
                     //public static extern Result vkCreateInstance(InstanceCreateInfo* pCreateInfo,AllocationCallbacks* pAllocator,Instance* pInstance);
                     //file.WriteLine($"\t\tprivate static function {convertedType} {command.Prototype.Name}Function({command.GetParametersSignature(vulkanSpec)});");
-                    file.WriteLine($"\t\ttypealias {command.Prototype.Name}Function = function {convertedType}({command.GetParametersSignature(vulkanSpec)});");
+                    file.WriteLine($"\t\tpublic typealias {command.Prototype.Name}Function = function {convertedType}({command.GetParametersSignature(vulkanSpec)});");
 
                     // Delegate
                     //file.WriteLine($"\t\tprivate delegate {convertedType} {command.Prototype.Name}Delegate({command.GetParametersSignature(vulkanSpec)});");
