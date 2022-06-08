@@ -278,6 +278,7 @@ namespace BulkanGen
                     file.WriteLine($"\t\tpublic this({handleType} existingHandle) {{ Handle = existingHandle; }}");
                     file.WriteLine($"\t\tpublic static {handle.Name} Null => {handle.Name}({nullValue});");
                     file.WriteLine($"\t\tpublic static implicit operator {handle.Name}({handleType} handle) => {handle.Name}(handle);");
+                    file.WriteLine($"\t\tpublic static implicit operator {handleType}(Self self) => self.Handle;");
                     file.WriteLine($"\t\tpublic static bool operator ==({handle.Name} left, {handle.Name} right) => left.Handle == right.Handle;");
                     file.WriteLine($"\t\tpublic static bool operator !=({handle.Name} left, {handle.Name} right) => left.Handle != right.Handle;");
                     file.WriteLine($"\t\tpublic static bool operator ==({handle.Name} left, {handleType} right) => left.Handle == right;");
