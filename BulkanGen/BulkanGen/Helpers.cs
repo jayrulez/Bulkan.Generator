@@ -273,13 +273,13 @@ namespace BulkanGen
                 case "StdVideoEncodeH265SliceHeader":
                 case "StdVideoEncodeH265ReferenceInfo":
                 case "StdVideoEncodeH265ReferenceModifications":
-                // bulkan
-                case "StdVideoH264Level":
-                case "StdVideoH265Level":
-                case "StdVideoEncodeH264ReferenceInfo":
-                case "StdVideoEncodeH264RefMemMgmtCtrlOperations":
                 case "StdVideoEncodeH265SliceSegmentHeader":
-                    // end bulkan
+                case "StdVideoEncodeH264RefMemMgmtCtrlOperations":
+                case "StdVideoEncodeH264ReferenceInfo":
+                // bulkan
+                //case "StdVideoH264Level":
+                //case "StdVideoH265Level":
+                // end bulkan
                     return true;
                 default:
                     return false;
