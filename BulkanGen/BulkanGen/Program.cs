@@ -313,11 +313,6 @@ namespace BulkanGen
                 {
                     string convertedType = Helpers.ConvertToBeefType(command.Prototype.Type, 0, vulkanSpec);
 
-                    if (command.Prototype.Name.Contains("vkCmdSetFragmentShadingRateKHR"))
-                    {
-                        int x = 1;
-                    }
-
                     //file.WriteLine("\t\t[UnmanagedFunctionPointer(CallConv)]");
                     //file.WriteLine($"\t\t[CallingConvention(VulkanNative.CallConv)]");
                     //public static extern Result vkCreateInstance(InstanceCreateInfo* pCreateInfo,AllocationCallbacks* pAllocator,Instance* pInstance);
