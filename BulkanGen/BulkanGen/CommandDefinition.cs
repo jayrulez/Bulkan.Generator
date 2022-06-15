@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
 namespace BulkanGen
@@ -57,7 +58,13 @@ namespace BulkanGen
                 string convertedName = Helpers.ValidatedName(p.Name);
 
                 if (useTypes)
-                    signature.Append($"{convertedType} ");
+                {
+                    if(p.IsStaticArray)
+                        signature.Append($"{convertedType}[{p.StaticArrayLength}] ");
+                    else
+                        signature.Append($"{convertedType} ");
+
+                }
 
                 signature.Append($"{convertedName}, ");
             }
@@ -76,6 +83,9 @@ namespace BulkanGen
 
     public class Param
     {
+        private static Regex _arraySubscriptRegex = new Regex(@"(\[\d+\])$", RegexOptions.IgnoreCase);
+        private static Regex _numberRegex = new Regex(@"(\d+)", RegexOptions.IgnoreCase);
+
         public string Type;
         public string Name;
         public int PointerLevel;
@@ -83,6 +93,8 @@ namespace BulkanGen
         public string Externsync;
         public string Len;
         public bool IsNoautovalidity;
+        public bool IsStaticArray;
+        public int StaticArrayLength;
 
         internal static Param FromXML(XElement elem)
         {
@@ -101,6 +113,20 @@ namespace BulkanGen
             else if (elem.Value.Contains($"{p.Type}*"))
             {
                 p.PointerLevel = 1;
+            }
+
+            Match arrayMatch = _arraySubscriptRegex.Match(elem.Value);
+            if (arrayMatch.Success)
+            {
+                Match arraySizeMatch = _numberRegex.Match(arrayMatch.Captures[0].Value);
+
+                if (arraySizeMatch.Success)
+                {
+                    if (int.TryParse(arraySizeMatch.Captures[0].Value, out p.StaticArrayLength))
+                    {
+                        p.IsStaticArray = true;
+                    }
+                }
             }
 
             return p;

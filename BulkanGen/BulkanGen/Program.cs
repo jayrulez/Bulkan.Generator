@@ -268,7 +268,7 @@ namespace BulkanGen
                 foreach (var handle in vulkanVersion.Handles)
                 {
                     file.WriteLine("\t[CRepr]");
-                    file.WriteLine($"\tpublic struct {handle.Name} : IEquatable<{handle.Name}>");
+                    file.WriteLine($"\tpublic struct {handle.Name} : IEquatable<{handle.Name}>, IHashable");
                     file.WriteLine("\t{");
                     string handleType = handle.Dispatchable ? "int" : "uint64";
                     string nullValue = handle.Dispatchable ? "0" : "0";
@@ -284,6 +284,8 @@ namespace BulkanGen
                     file.WriteLine($"\t\tpublic static bool operator ==({handle.Name} left, {handleType} right) => left.Handle == right;");
                     file.WriteLine($"\t\tpublic static bool operator !=({handle.Name} left, {handleType} right) => left.Handle != right;");
                     file.WriteLine($"\t\tpublic bool Equals({handle.Name} h) => Handle == h.Handle;");
+                    file.WriteLine($"");
+                    file.WriteLine($"\t\tpublic int GetHashCode() {{ return (.)Handle; }}");
                     //file.WriteLine($"\t\tpublic override bool Equals(object o) => o is {handle.Name} h && Equals(h);");
                     //file.WriteLine($"\t\tpublic override int GetHashCode() => Handle.GetHashCode();");
                     file.WriteLine("\t}\n");
@@ -310,6 +312,11 @@ namespace BulkanGen
                 foreach (var command in vulkanVersion.Commands)
                 {
                     string convertedType = Helpers.ConvertToBeefType(command.Prototype.Type, 0, vulkanSpec);
+
+                    if (command.Prototype.Name.Contains("vkCmdSetFragmentShadingRateKHR"))
+                    {
+                        int x = 1;
+                    }
 
                     //file.WriteLine("\t\t[UnmanagedFunctionPointer(CallConv)]");
                     //file.WriteLine($"\t\t[CallingConvention(VulkanNative.CallConv)]");
