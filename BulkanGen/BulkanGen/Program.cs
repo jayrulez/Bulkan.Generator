@@ -95,6 +95,8 @@ namespace BulkanGen
 
                 foreach (var e in vulkanVersion.Enums)
                 {
+                    var prettyMembers = new StringWriter();
+
                     //if (e.Type == EnumType.Bitmask)
                     //    file.WriteLine("\t[Flags]");
                     file.WriteLine($"\t[AllowDuplicates]");
@@ -117,7 +119,12 @@ namespace BulkanGen
                     foreach (var member in e.Values)
                     {
                         file.WriteLine($"\t\t{member.Name} = {member.Value},");
+                        var prettyMemberName = Helpers.GetPrettyEnumValue(e.Name, member.Name);
+                        prettyMembers.WriteLine($"\t\t{prettyMemberName} = .{member.Name},");
                     }
+
+                    file.WriteLine("\t\t// Pretty names");
+                    file.WriteLine(prettyMembers);
 
                     file.WriteLine("\t}\n");
 
@@ -169,6 +176,8 @@ namespace BulkanGen
 
                 foreach (var structure in vulkanVersion.Structs)
                 {
+                    var methodsStream = new StringWriter();
+
                     var useExplicitLayout = structure.Members.Any(s => s.ExplicityLayoutValue.HasValue == true);
                     int layoutValue = 0;
                     if (useExplicitLayout)
@@ -183,6 +192,7 @@ namespace BulkanGen
                     file.WriteLine("\t{");
 
 
+
                     foreach (var member in structure.Members)
                     {
                         if (useExplicitLayout)
@@ -191,38 +201,18 @@ namespace BulkanGen
                             layoutValue += Member.GetSizeInBytes(member, vulkanVersion);
                         }
 
-                        string csType = Helpers.GetPrettyEnumName(Helpers.ConvertToBeefType(member.Type, member.PointerLevel, vulkanSpec));
-                        string vkStructureType = "VkStructureType";
-
-                        if (csType.Equals(vkStructureType, StringComparison.OrdinalIgnoreCase))
-                        {
-                            var vkStructureTypeEnum = vulkanVersion.Enums.FirstOrDefault(e => e.Name.Equals(vkStructureType, StringComparison.OrdinalIgnoreCase));
-
-                            var sTypeCI = $"VkStructureType{structure.Name.Remove(0, 2)}";
-
-                            var vkStructureValue = vkStructureTypeEnum.Values.FirstOrDefault(v => v.Name.Replace("_", "").Equals(sTypeCI, StringComparison.OrdinalIgnoreCase));
-                            if (vkStructureValue != null)
-                            {
-                                file.WriteLine($"\t\tpublic {csType} {Helpers.ValidatedName(member.Name)} = .{vkStructureValue.Name};");
-                                continue;
-                            }
-                        }
-
+                        string bfType = Helpers.GetPrettyEnumName(Helpers.ConvertToBeefType(member.Type, member.PointerLevel, vulkanSpec));
                         if (member.ElementCount > 1)
                         {
-                            file.WriteLine($"\t\tpublic {csType}[{member.ElementCount}] {member.Name};");
-                            //for (int i = 0; i < member.ElementCount; i++)
-                            //{
-                            //    file.WriteLine($"\t\tpublic {csType} {member.Name}_{i};");
-                            //}
+                            bfType = $"{bfType}[{member.ElementCount}]";
                         }
                         else if (member.ConstantValue != null)
                         {
                             var validConstant = vulkanVersion.Constants.FirstOrDefault(c => c.Name == member.ConstantValue);
 
-                            if (Helpers.SupportFixed(csType))
+                            if (Helpers.SupportFixed(bfType))
                             {
-                                file.WriteLine($"\t\tpublic {csType}[(int)VulkanNative.{validConstant.Name}] {Helpers.ValidatedName(member.Name)};");
+                                bfType = $"{bfType}[(int)VulkanNative.{validConstant.Name}]";
                             }
                             else
                             {
@@ -237,20 +227,38 @@ namespace BulkanGen
                                 {
                                     count = int.Parse(validConstant.Value);
                                 }
-                                file.WriteLine($"\t\tpublic {csType}[{count}] {member.Name};");
-                                /*
-                                for (int i = 0; i < count; i++)
-                                {
-                                    file.WriteLine($"\t\tpublic {csType} {member.Name}_{i};");
-                                }
-                                */
+                                bfType = $"{bfType}[{count}]";
                             }
                         }
-                        else
+
+                        methodsStream.WriteLine("");
+                        string setMethodName = Helpers.ValidatedName(member.Name);
+                        setMethodName = "set" + char.ToUpper(Helpers.ValidatedName(member.Name)[0]) + Helpers.ValidatedName(member.Name).Substring(1);
+                        methodsStream.Write($"\t\tpublic ref Self {setMethodName}({bfType} @{Helpers.ValidatedName(member.Name)}) mut {{ {Helpers.ValidatedName(member.Name)} = @{Helpers.ValidatedName(member.Name)};  return ref this; }}");
+
+                        string vkStructureType = "VkStructureType";
+                        if (bfType.Equals(vkStructureType, StringComparison.OrdinalIgnoreCase))
                         {
-                            file.WriteLine($"\t\tpublic {csType} {Helpers.ValidatedName(member.Name)};");
+                            var vkStructureTypeEnum = vulkanVersion.Enums.FirstOrDefault(e => e.Name.Equals(vkStructureType, StringComparison.OrdinalIgnoreCase));
+
+                            var sTypeCI = $"VkStructureType{structure.Name.Remove(0, 2)}";
+
+                            var vkStructureValue = vkStructureTypeEnum.Values.FirstOrDefault(v => v.Name.Replace("_", "").Equals(sTypeCI, StringComparison.OrdinalIgnoreCase));
+                            if (vkStructureValue != null)
+                            {
+                                file.WriteLine($"\t\tpublic {bfType} {Helpers.ValidatedName(member.Name)} = .{vkStructureValue.Name};");
+
+                                continue;
+                            }
                         }
+
+                        if (Helpers.ValidatedName(member.Name) == "pNext")
+                            file.WriteLine($"\t\tpublic {bfType} {Helpers.ValidatedName(member.Name)} = null;");
+                        else
+                            file.WriteLine($"\t\tpublic {bfType} {Helpers.ValidatedName(member.Name)};");
                     }
+                    methodsStream.WriteLine();
+                    file.Write(methodsStream);
 
                     file.WriteLine("\t}\n");
                 }

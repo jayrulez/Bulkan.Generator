@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -42,7 +43,8 @@ namespace BulkanGen
             if (name == "scope")
             {
                 return "vkscope";
-            }else if (name == "function")
+            }
+            else if (name == "function")
             {
                 return "vkfunction";
             }
@@ -53,7 +55,7 @@ namespace BulkanGen
         public static string GetPrettyEnumName(string value)
         {
             int start;
-            if((start = value.IndexOf("bit", StringComparison.OrdinalIgnoreCase)) != -1)
+            if ((start = value.IndexOf("bit", StringComparison.OrdinalIgnoreCase)) != -1)
             {
                 return value.Remove(start, 3);
             }
@@ -200,6 +202,68 @@ namespace BulkanGen
                 default:
                     return string.Empty;
             }
+        }
+
+        private static string ConvertToUpperSnakeCase(string value)
+        {
+            string snakeCase = string.Empty;
+            for (int i = 0; i < value.Length; i++)
+            {
+                char c = value[i];
+                snakeCase += char.ToUpperInvariant(c);
+                if (i + 1 < value.Length && char.IsUpper(value[i + 1]))
+                    snakeCase += "_";
+            }
+            return snakeCase.TrimEnd('_');
+        }
+
+        private static string ConvertSnakeUpperCaseToTitleCase(string upperSnakeCase)
+        {
+            var toTitleCase = string (string input) =>
+            {
+                string output = string.Empty;
+
+                for (int i = 0; i < input.Length; i++)
+                {
+                    if (i == 0)
+                    {
+                        output += char.ToUpperInvariant(input[i]);
+                        continue;
+                    }
+
+                    if (i + 1 < input.Length && char.IsDigit(input[i + 1]))
+                    {
+                        if (!char.IsLower(input[i]))
+                            output += char.ToUpperInvariant(input[i]);
+                        else
+                            output += char.ToLowerInvariant(input[i]);
+                        continue;
+                    }
+                    output += char.ToLowerInvariant(input[i]);
+                }
+
+                return output;
+            };
+
+            var words = upperSnakeCase.Split('_');
+            var titleCase = string.Join("", words.Select(w => toTitleCase(w)));
+
+            return titleCase;
+        }
+
+        public static string GetPrettyEnumValue(string enumName, string enumValueName)
+        {
+            string prettyEnumName = GetPrettyEnumName(enumName);
+
+            string prettyEnumValueName = enumValueName;
+
+            string uglyEnumName = ConvertToUpperSnakeCase(prettyEnumName);
+
+            prettyEnumValueName = prettyEnumValueName.Replace($"{uglyEnumName}_", "");
+
+            prettyEnumValueName = $"e{ConvertSnakeUpperCaseToTitleCase(prettyEnumValueName)}";
+
+            return prettyEnumValueName;
         }
 
         public static bool SupportFixed(string type)
