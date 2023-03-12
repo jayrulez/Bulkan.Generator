@@ -340,7 +340,9 @@ namespace BulkanGen
                     file.WriteLine($"\t\t\t=> {command.Prototype.Name}_ptr({command.GetParametersSignature(vulkanSpec, useTypes: false)});\n");
 
                     commandDictionary.Add($"\tcase \"{command.Prototype.Name}\":");
-                    commandDictionary.Add($"\t\tmNativeLib.LoadFunction(\"{command.Prototype.Name}\", out {command.Prototype.Name}_ptr);");
+                    commandDictionary.Add($"\t\tmNativeLib.LoadFunction(\"{command.Prototype.Name}\", out {command.Prototype.Name}_ptr, invokeErrorCallback);");
+                    commandDictionary.Add($"\t\tif({command.Prototype.Name}_ptr == null)");
+                    commandDictionary.Add($"\t\t\treturn .Err;");
                     commandDictionary.Add($"\t\tbreak;");
                     commandDictionary.Add("");
                 }
@@ -353,7 +355,7 @@ namespace BulkanGen
 
                 if (commandDictionary.Count > 0)
                 {
-                    file.WriteLine("\t\tprivate static void LoadFunction(in StringView name)");
+                    file.WriteLine("\t\tpublic static Result<void> LoadFunction(StringView name, bool invokeErrorCallback = true)");
                     file.WriteLine("\t\t{");
                     file.WriteLine("\t\t\tswitch (name) {");
 
@@ -368,23 +370,26 @@ namespace BulkanGen
                     file.WriteLine($"\t\t\tdefault:");
                     file.WriteLine($"\t\t\t\tRuntime.FatalError(scope $\"Unknown function name '{{name}}'.\");");
                     file.WriteLine("\t\t\t}");
+                    file.WriteLine("\t\t\treturn .Ok;");
                     file.WriteLine("\t\t}");
                     file.WriteLine();
                 }
 
-                file.WriteLine($"\t\tpublic static void LoadFunctions(in Span<StringView> functions, VkInstance? instance = null)");
+                file.WriteLine($"\t\tpublic static Result<void, String> LoadFunctions(Span<String> functions, VkInstance? instance = null)");
                 file.WriteLine("\t\t{");
                 file.WriteLine("\t\t\tif(instance != null)");
                 file.WriteLine("\t\t\t\tSetInstance(instance.Value);");
                 file.WriteLine();
                 file.WriteLine("\t\t\tfor (var func in functions)");
                 file.WriteLine("\t\t\t{");
-                file.WriteLine("\t\t\t\tLoadFunction(func);");
+                file.WriteLine("\t\t\t\tif(LoadFunction(func) case .Err)");
+                file.WriteLine("\t\t\t\t\treturn .Err(func);");
                 file.WriteLine("\t\t\t}");
+                file.WriteLine("\t\t\treturn .Ok;");
                 file.WriteLine("\t\t}");
                 file.WriteLine();
 
-                file.WriteLine($"\t\tprivate static void LoadAllFuncions(VkInstance? instance = null, List<StringView> excludeFunctions = null)");
+                file.WriteLine($"\t\tprivate static void LoadAllFuncions(VkInstance? instance = null, List<String> excludeFunctions = null)");
                 file.WriteLine("\t\t{");
                 file.WriteLine("\t\t\tif (instance != null)");
                 file.WriteLine("\t\t\t\tSetInstance(instance.Value);");
@@ -392,7 +397,7 @@ namespace BulkanGen
                 foreach (var command in vulkanVersion.Commands)
                 {
                     file.WriteLine($"\t\t\tif(excludeFunctions == null || !excludeFunctions.Contains(\"{command.Prototype.Name}\"))");
-                    file.WriteLine($"\t\t\t\tLoadFunction(\"{command.Prototype.Name}\");");
+                    file.WriteLine($"\t\t\t\tLoadFunction(\"{command.Prototype.Name}\").IgnoreError();");
                     file.WriteLine();
                 }
 
@@ -401,7 +406,7 @@ namespace BulkanGen
 
                 file.WriteLine();
 
-                file.WriteLine($"\t\tpublic static void LoadFunction<T>(in StringView name, out T funcPtr)");
+                file.WriteLine($"\t\tpublic static void LoadFunction<T>(StringView name, out T funcPtr)");
                 file.WriteLine("\t\t{");
                 file.WriteLine("\t\t\tmNativeLib.LoadFunction(name, out funcPtr);");
                 file.WriteLine("\t\t}");
