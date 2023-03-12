@@ -104,7 +104,8 @@ namespace BulkanGen
                     if (Helpers.GetPrettyEnumName(e.Name).Equals("VkResult")
                         || Helpers.GetPrettyEnumName(e.Name).Equals("VkFormatFeatureFlags2")
                         || Helpers.GetPrettyEnumName(e.Name).Equals("VkFormatFeatureFlags2KHR")
-                        || Helpers.GetPrettyEnumName(e.Name).Equals("VkQueryResultStatusKHR"))
+                        || Helpers.GetPrettyEnumName(e.Name).Equals("VkQueryResultStatusKHR")
+                        || Helpers.GetPrettyEnumName(e.Name).Equals("VkOpacityMicromapSpecialIndexEXT"))
                     {
                         underlyingType = "int32";
                     }

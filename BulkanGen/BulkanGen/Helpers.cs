@@ -340,6 +340,8 @@ namespace BulkanGen
                 case "StdVideoEncodeH265SliceSegmentHeader":
                 case "StdVideoEncodeH264RefMemMgmtCtrlOperations":
                 case "StdVideoEncodeH264ReferenceInfo":
+                case "StdVideoH264LevelIdc":
+                case "StdVideoH265LevelIdc":
                 //Metal Layer
                 case "MTLDevice_id":
                 case "MTLCommandQueue_id":
@@ -347,9 +349,15 @@ namespace BulkanGen
                 case "MTLTexture_id":
                 case "MTLSharedEvent_id":
                 case "IOSurfaceRef":
-                    // bulkan
-                    //case "StdVideoH264Level":
-                    //case "StdVideoH265Level":
+                // bulkan
+                //case "StdVideoH264Level":
+                //case "StdVideoH265Level":
+
+                case "NvSciBufObj":
+                case "NvSciBufAttrList":
+                case "NvSciSyncObj":
+                case "NvSciSyncAttrList":
+                case "NvSciSyncFence":
                     // end bulkan
                     return true;
                 default:

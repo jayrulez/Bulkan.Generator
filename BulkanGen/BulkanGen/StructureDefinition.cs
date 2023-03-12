@@ -17,8 +17,14 @@ namespace BulkanGen
             s.IsReturnedOnly = elem.Attribute("returnedonly")?.Value == "true";
 
             var members = elem.Elements("member");
+            var names = new List<string>();
             foreach (var m in members)
             {
+                var name = m.Element("name").Value;
+                if (names.Contains(name))
+                    continue;
+
+                names.Add(name);
                 s.Members.Add(Member.FromXML(m));
             }
 

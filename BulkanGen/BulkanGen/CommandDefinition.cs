@@ -41,8 +41,15 @@ namespace BulkanGen
             }
 
             var parameters = elem.Elements("param");
+            var names = new List<string>();
             foreach (var param in parameters)
             {
+                var name = param.Element("name").Value;
+                if (names.Contains(name))
+                    continue;
+
+                names.Add(name);
+
                 command.Parameters.Add(Param.FromXML(param));
             }
 
@@ -59,7 +66,7 @@ namespace BulkanGen
 
                 if (useTypes)
                 {
-                    if(p.IsStaticArray)
+                    if (p.IsStaticArray)
                         signature.Append($"{convertedType}[{p.StaticArrayLength}] ");
                     else
                         signature.Append($"{convertedType} ");
