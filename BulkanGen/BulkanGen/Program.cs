@@ -285,14 +285,32 @@ namespace BulkanGen
                     file.WriteLine($"\t\tpublic readonly {handleType} Handle;");
 
                     file.WriteLine($"\t\tpublic this({handleType} existingHandle) {{ Handle = existingHandle; }}");
-                    file.WriteLine($"\t\tpublic static {handle.Name} Null => {handle.Name}({nullValue});");
-                    file.WriteLine($"\t\tpublic static implicit operator {handle.Name}({handleType} handle) => {handle.Name}(handle);");
+
+                    if (handleType != "int")
+                        file.WriteLine($"\t\tpublic this(void* existingHandle) {{ Handle = ({handleType})(int)existingHandle; }}");
+                    else
+                        file.WriteLine($"\t\tpublic this(void* existingHandle) {{ Handle = ({handleType})existingHandle; }}");
+
+                    file.WriteLine($"\t\tpublic static Self Null => Self({nullValue});");
+                    file.WriteLine($"\t\tpublic static implicit operator Self({handleType} handle) => Self(handle);");
                     file.WriteLine($"\t\tpublic static implicit operator {handleType}(Self self) => self.Handle;");
-                    file.WriteLine($"\t\tpublic static bool operator ==({handle.Name} left, {handle.Name} right) => left.Handle == right.Handle;");
-                    file.WriteLine($"\t\tpublic static bool operator !=({handle.Name} left, {handle.Name} right) => left.Handle != right.Handle;");
-                    file.WriteLine($"\t\tpublic static bool operator ==({handle.Name} left, {handleType} right) => left.Handle == right;");
-                    file.WriteLine($"\t\tpublic static bool operator !=({handle.Name} left, {handleType} right) => left.Handle != right;");
-                    file.WriteLine($"\t\tpublic bool Equals({handle.Name} h) => Handle == h.Handle;");
+
+                    if (handleType != "int")
+                    {
+                        file.WriteLine($"\t\tpublic static implicit operator Self(void* handle) => Self(({handleType})(int)handle);");
+                        file.WriteLine($"\t\tpublic static implicit operator void*(Self self) => (void*)(int)self.Handle;");
+                    }
+                    else
+                    {
+                        file.WriteLine($"\t\tpublic static implicit operator Self(void* handle) => Self(({handleType})handle);");
+                        file.WriteLine($"\t\tpublic static implicit operator void*(Self self) => (void*)({handleType})self.Handle;");
+                    }
+
+                    file.WriteLine($"\t\tpublic static bool operator ==(Self left, Self right) => left.Handle == right.Handle;");
+                    file.WriteLine($"\t\tpublic static bool operator !=(Self left, Self right) => left.Handle != right.Handle;");
+                    file.WriteLine($"\t\tpublic static bool operator ==(Self left, {handleType} right) => left.Handle == right;");
+                    file.WriteLine($"\t\tpublic static bool operator !=(Self left, {handleType} right) => left.Handle != right;");
+                    file.WriteLine($"\t\tpublic bool Equals(Self h) => Handle == h.Handle;");
                     file.WriteLine($"");
                     file.WriteLine($"\t\tpublic int GetHashCode() {{ return (.)Handle; }}");
                     //file.WriteLine($"\t\tpublic override bool Equals(object o) => o is {handle.Name} h && Equals(h);");
