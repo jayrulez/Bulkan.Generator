@@ -21,38 +21,41 @@ namespace BulkanGen
             // Write Constants
             using (StreamWriter file = File.CreateText(Path.Combine(outputPath, "Constants.bf")))
             {
-                file.WriteLine($"namespace {projectNamespace}");
+                file.WriteLine($"namespace {projectNamespace};");
+                //file.WriteLine("{");
+                file.WriteLine("");
+                file.WriteLine("public extension VulkanNative");
                 file.WriteLine("{");
-                file.WriteLine("\tpublic extension VulkanNative");
-                file.WriteLine("\t{");
 
                 foreach (var constant in vulkanVersion.Constants)
                 {
                     if (constant.Alias != null)
                     {
                         var refConstant = vulkanVersion.Constants.FirstOrDefault(c => c.Name == constant.Alias);
-                        file.WriteLine($"\t\tpublic const {refConstant.Type.ToBeefType()} {constant.Name} = {refConstant.Name};");
+                        file.WriteLine($"\tpublic const {refConstant.Type.ToBeefType()} {constant.Name} = {refConstant.Name};");
                     }
                     else
                     {
-                        file.WriteLine($"\t\tpublic const {constant.Type.ToBeefType()} {constant.Name} = {ConstantDefinition.NormalizeValue(constant.Value)};");
+                        file.WriteLine($"\tpublic const {constant.Type.ToBeefType()} {constant.Name} = {ConstantDefinition.NormalizeValue(constant.Value)};");
                     }
                 }
 
-                file.WriteLine("\t}");
                 file.WriteLine("}");
+                //file.WriteLine("}");
+                file.WriteLine("");
             }
 
             // Function Pointers
             using (StreamWriter file = File.CreateText(Path.Combine(outputPath, "FunctionPointers.bf")))
             {
                 file.WriteLine("using System;\n");
-                file.WriteLine($"namespace {projectNamespace}");
-                file.WriteLine("{");
+                file.WriteLine($"namespace {projectNamespace};");
+                //file.WriteLine("{");
+                file.WriteLine("");
 
                 foreach (var func in vulkanVersion.FuncPointers)
                 {
-                    file.Write($"\tpublic typealias {func.Name} = function {func.Type}(");
+                    file.Write($"public typealias {func.Name} = function {func.Type}(");
                     //file.Write($"\tpublic function {func.Type} {func.Name}(");
                     if (func.Parameters.Count > 0)
                     {
@@ -77,29 +80,31 @@ namespace BulkanGen
                                 convertedType = type;
                             }
 
-                            file.Write($"\t\t{Helpers.GetPrettyEnumName(convertedType)} {Helpers.ValidatedName(func.Parameters[p].Name)}");
+                            file.Write($"\t{Helpers.GetPrettyEnumName(convertedType)} {Helpers.ValidatedName(func.Parameters[p].Name)}");
                         }
                     }
                     file.Write(");\n\n");
                 }
 
-                file.WriteLine("}");
+                //file.WriteLine("}");
+                file.WriteLine("");
             }
 
             // Enums
             using (StreamWriter file = File.CreateText(Path.Combine(outputPath, "Enums.bf")))
             {
                 file.WriteLine("using System;\n");
-                file.WriteLine($"namespace {projectNamespace}");
-                file.WriteLine("{");
+                file.WriteLine($"namespace {projectNamespace};");
+                //file.WriteLine("{");
+                file.WriteLine("");
 
                 foreach (var e in vulkanVersion.Enums)
                 {
                     var prettyMembers = new StringWriter();
 
                     //if (e.Type == EnumType.Bitmask)
-                    //    file.WriteLine("\t[Flags]");
-                    file.WriteLine($"\t[AllowDuplicates]");
+                    //    file.WriteLine("[Flags]");
+                    file.WriteLine($"[AllowDuplicates]");
                     string underlyingType = "uint32";
                     if (Helpers.GetPrettyEnumName(e.Name).Equals("VkResult")
                         || Helpers.GetPrettyEnumName(e.Name).Equals("VkFormatFeatureFlags2")
@@ -109,29 +114,30 @@ namespace BulkanGen
                     {
                         underlyingType = "int32";
                     }
-                    file.WriteLine($"\tpublic enum {Helpers.GetPrettyEnumName(e.Name)} : {underlyingType}");
-                    file.WriteLine("\t{");
+                    file.WriteLine($"public enum {Helpers.GetPrettyEnumName(e.Name)} : {underlyingType}");
+                    file.WriteLine("{");
 
                     if (!(e.Values.Exists(v => v.Value == 0)))
                     {
-                        file.WriteLine("\t\tNone = 0,");
+                        file.WriteLine("\tNone = 0,");
                     }
 
                     foreach (var member in e.Values)
                     {
-                        file.WriteLine($"\t\t{member.Name} = {member.Value},");
+                        file.WriteLine($"\t{member.Name} = {member.Value},");
                         var prettyMemberName = Helpers.GetPrettyEnumValue(e.Name, member.Name);
-                        prettyMembers.WriteLine($"\t\t{prettyMemberName} = .{member.Name},");
+                        prettyMembers.WriteLine($"\t{prettyMemberName} = .{member.Name},");
                     }
 
-                    file.WriteLine("\t\t// Pretty names");
+                    file.WriteLine("\t// Pretty names");
                     file.WriteLine(prettyMembers);
 
-                    file.WriteLine("\t}\n");
+                    file.WriteLine("}\n");
 
                 }
 
-                file.WriteLine("}");
+                //file.WriteLine("}");
+                file.WriteLine("");
             }
 
             // Unions
@@ -139,32 +145,34 @@ namespace BulkanGen
             {
                 //file.WriteLine("using System.Runtime.InteropServices;\n");
                 file.WriteLine($"using System;");
-                file.WriteLine($"namespace {projectNamespace}");
-                file.WriteLine("{");
+                file.WriteLine($"namespace {projectNamespace};");
+                //file.WriteLine("{");
+                file.WriteLine("");
 
                 foreach (var union in vulkanVersion.Unions)
                 {
-                    file.WriteLine("\t[CRepr, Union]");
-                    file.WriteLine($"\tpublic struct {union.Name}");
-                    file.WriteLine("\t{");
+                    file.WriteLine("[CRepr, Union]");
+                    file.WriteLine($"public struct {union.Name}");
+                    file.WriteLine("{");
                     foreach (var member in union.Members)
                     {
                         string csType = Helpers.ConvertToBeefType(member.Type, member.PointerLevel, vulkanSpec);
 
                         if (member.ElementCount > 1)
                         {
-                            file.WriteLine($"\t\tpublic {csType}[{member.ElementCount}] {member.Name};");
+                            file.WriteLine($"\tpublic {csType}[{member.ElementCount}] {member.Name};");
                         }
                         else
                         {
-                            file.WriteLine($"\t\tpublic {csType} {member.Name};");
+                            file.WriteLine($"\tpublic {csType} {member.Name};");
                         }
                     }
 
-                    file.WriteLine("\t}\n");
+                    file.WriteLine("}\n");
                 }
 
-                file.WriteLine("}\n");
+                //file.WriteLine("}\n");
+                file.WriteLine("\n");
             }
 
             // structs
@@ -172,8 +180,9 @@ namespace BulkanGen
             {
                 file.WriteLine("using System;");
                 //file.WriteLine("using System.Runtime.InteropServices;\n");
-                file.WriteLine($"namespace {projectNamespace}");
-                file.WriteLine("{");
+                file.WriteLine($"namespace {projectNamespace};");
+                //file.WriteLine("{");
+                file.WriteLine("");
 
                 foreach (var structure in vulkanVersion.Structs)
                 {
@@ -183,14 +192,14 @@ namespace BulkanGen
                     int layoutValue = 0;
                     if (useExplicitLayout)
                     {
-                        file.WriteLine("\t[CRepr]");
+                        file.WriteLine("[CRepr]");
                     }
                     else
                     {
-                        file.WriteLine("\t[CRepr]");
+                        file.WriteLine("[CRepr]");
                     }
-                    file.WriteLine($"\tpublic struct {structure.Name}");
-                    file.WriteLine("\t{");
+                    file.WriteLine($"public struct {structure.Name}");
+                    file.WriteLine("{");
 
 
 
@@ -198,7 +207,7 @@ namespace BulkanGen
                     {
                         if (useExplicitLayout)
                         {
-                            //file.WriteLine($"\t\t[FieldOffset({layoutValue})]");
+                            //file.WriteLine($"\t[FieldOffset({layoutValue})]");
                             layoutValue += Member.GetSizeInBytes(member, vulkanVersion);
                         }
 
@@ -235,7 +244,7 @@ namespace BulkanGen
                         methodsStream.WriteLine("");
                         string setMethodName = Helpers.ValidatedName(member.Name);
                         setMethodName = "set" + char.ToUpper(Helpers.ValidatedName(member.Name)[0]) + Helpers.ValidatedName(member.Name).Substring(1);
-                        methodsStream.Write($"\t\tpublic ref Self {setMethodName}({bfType} @{Helpers.ValidatedName(member.Name)}) mut {{ {Helpers.ValidatedName(member.Name)} = @{Helpers.ValidatedName(member.Name)};  return ref this; }}");
+                        methodsStream.Write($"\tpublic ref Self {setMethodName}({bfType} @{Helpers.ValidatedName(member.Name)}) mut {{ {Helpers.ValidatedName(member.Name)} = @{Helpers.ValidatedName(member.Name)};  return ref this; }}");
 
                         string vkStructureType = "VkStructureType";
                         if (bfType.Equals(vkStructureType, StringComparison.OrdinalIgnoreCase))
@@ -247,78 +256,80 @@ namespace BulkanGen
                             var vkStructureValue = vkStructureTypeEnum.Values.FirstOrDefault(v => v.Name.Replace("_", "").Equals(sTypeCI, StringComparison.OrdinalIgnoreCase));
                             if (vkStructureValue != null)
                             {
-                                file.WriteLine($"\t\tpublic {bfType} {Helpers.ValidatedName(member.Name)} = .{vkStructureValue.Name};");
+                                file.WriteLine($"\tpublic {bfType} {Helpers.ValidatedName(member.Name)} = .{vkStructureValue.Name};");
 
                                 continue;
                             }
                         }
 
                         if (Helpers.ValidatedName(member.Name) == "pNext")
-                            file.WriteLine($"\t\tpublic {bfType} {Helpers.ValidatedName(member.Name)} = null;");
+                            file.WriteLine($"\tpublic {bfType} {Helpers.ValidatedName(member.Name)} = null;");
                         else
-                            file.WriteLine($"\t\tpublic {bfType} {Helpers.ValidatedName(member.Name)};");
+                            file.WriteLine($"\tpublic {bfType} {Helpers.ValidatedName(member.Name)};");
                     }
                     methodsStream.WriteLine();
                     file.Write(methodsStream);
 
-                    file.WriteLine("\t}\n");
+                    file.WriteLine("}\n");
                 }
 
-                file.WriteLine("}\n");
+                //file.WriteLine("}\n");
+                file.WriteLine("\n");
             }
 
             // Handles
             using (StreamWriter file = File.CreateText(Path.Combine(outputPath, "Handles.bf")))
             {
                 file.WriteLine("using System;\n");
-                file.WriteLine($"namespace {projectNamespace}");
-                file.WriteLine("{");
+                file.WriteLine($"namespace {projectNamespace};");
+                //file.WriteLine("{");
+                file.WriteLine("");
 
                 foreach (var handle in vulkanVersion.Handles)
                 {
-                    file.WriteLine("\t[CRepr]");
-                    file.WriteLine($"\tpublic struct {handle.Name} : IEquatable<{handle.Name}>, IHashable");
-                    file.WriteLine("\t{");
+                    file.WriteLine("[CRepr]");
+                    file.WriteLine($"public struct {handle.Name} : IEquatable<{handle.Name}>, IHashable");
+                    file.WriteLine("{");
                     string handleType = handle.Dispatchable ? "int" : "uint64";
                     string nullValue = handle.Dispatchable ? "0" : "0";
 
-                    file.WriteLine($"\t\tpublic readonly {handleType} Handle;");
+                    file.WriteLine($"\tpublic readonly {handleType} Handle;");
 
-                    file.WriteLine($"\t\tpublic this({handleType} existingHandle) {{ Handle = existingHandle; }}");
+                    file.WriteLine($"\tpublic this({handleType} existingHandle) {{ Handle = existingHandle; }}");
 
                     if (handleType != "int")
-                        file.WriteLine($"\t\tpublic this(void* existingHandle) {{ Handle = ({handleType})(int)existingHandle; }}");
+                        file.WriteLine($"\tpublic this(void* existingHandle) {{ Handle = ({handleType})(int)existingHandle; }}");
                     else
-                        file.WriteLine($"\t\tpublic this(void* existingHandle) {{ Handle = ({handleType})existingHandle; }}");
+                        file.WriteLine($"\tpublic this(void* existingHandle) {{ Handle = ({handleType})existingHandle; }}");
 
-                    file.WriteLine($"\t\tpublic static Self Null => Self({nullValue});");
-                    file.WriteLine($"\t\tpublic static implicit operator Self({handleType} handle) => Self(handle);");
-                    file.WriteLine($"\t\tpublic static implicit operator {handleType}(Self self) => self.Handle;");
+                    file.WriteLine($"\tpublic static Self Null => Self({nullValue});");
+                    file.WriteLine($"\tpublic static implicit operator Self({handleType} handle) => Self(handle);");
+                    file.WriteLine($"\tpublic static implicit operator {handleType}(Self self) => self.Handle;");
 
                     if (handleType != "int")
                     {
-                        file.WriteLine($"\t\tpublic static implicit operator Self(void* handle) => Self(({handleType})(int)handle);");
-                        file.WriteLine($"\t\tpublic static implicit operator void*(Self self) => (void*)(int)self.Handle;");
+                        file.WriteLine($"\tpublic static implicit operator Self(void* handle) => Self(({handleType})(int)handle);");
+                        file.WriteLine($"\tpublic static implicit operator void*(Self self) => (void*)(int)self.Handle;");
                     }
                     else
                     {
-                        file.WriteLine($"\t\tpublic static implicit operator Self(void* handle) => Self(({handleType})handle);");
-                        file.WriteLine($"\t\tpublic static implicit operator void*(Self self) => (void*)({handleType})self.Handle;");
+                        file.WriteLine($"\tpublic static implicit operator Self(void* handle) => Self(({handleType})handle);");
+                        file.WriteLine($"\tpublic static implicit operator void*(Self self) => (void*)({handleType})self.Handle;");
                     }
 
-                    file.WriteLine($"\t\tpublic static bool operator ==(Self left, Self right) => left.Handle == right.Handle;");
-                    file.WriteLine($"\t\tpublic static bool operator !=(Self left, Self right) => left.Handle != right.Handle;");
-                    file.WriteLine($"\t\tpublic static bool operator ==(Self left, {handleType} right) => left.Handle == right;");
-                    file.WriteLine($"\t\tpublic static bool operator !=(Self left, {handleType} right) => left.Handle != right;");
-                    file.WriteLine($"\t\tpublic bool Equals(Self h) => Handle == h.Handle;");
+                    file.WriteLine($"\tpublic static bool operator ==(Self left, Self right) => left.Handle == right.Handle;");
+                    file.WriteLine($"\tpublic static bool operator !=(Self left, Self right) => left.Handle != right.Handle;");
+                    file.WriteLine($"\tpublic static bool operator ==(Self left, {handleType} right) => left.Handle == right;");
+                    file.WriteLine($"\tpublic static bool operator !=(Self left, {handleType} right) => left.Handle != right;");
+                    file.WriteLine($"\tpublic bool Equals(Self h) => Handle == h.Handle;");
                     file.WriteLine($"");
-                    file.WriteLine($"\t\tpublic int GetHashCode() {{ return (.)Handle; }}");
-                    //file.WriteLine($"\t\tpublic override bool Equals(object o) => o is {handle.Name} h && Equals(h);");
-                    //file.WriteLine($"\t\tpublic override int GetHashCode() => Handle.GetHashCode();");
-                    file.WriteLine("\t}\n");
+                    file.WriteLine($"\tpublic int GetHashCode() {{ return (.)Handle; }}");
+                    //file.WriteLine($"\tpublic override bool Equals(object o) => o is {handle.Name} h && Equals(h);");
+                    //file.WriteLine($"\tpublic override int GetHashCode() => Handle.GetHashCode();");
+                    file.WriteLine("}\n");
                 }
 
-                file.WriteLine("}");
+                //file.WriteLine("}");
             }
 
             // Commands
@@ -328,34 +339,35 @@ namespace BulkanGen
                 file.WriteLine("using System.Collections;");
                 file.WriteLine($"using internal {projectNamespace};");
                 //file.WriteLine("using System.Runtime.InteropServices;\n");
-                file.WriteLine($"namespace {projectNamespace}");
+                file.WriteLine($"namespace {projectNamespace};");
+                //file.WriteLine("{");
+                file.WriteLine("");
+
+
+                file.WriteLine("public extension VulkanNative");
                 file.WriteLine("{");
-
-
-                file.WriteLine("\tpublic extension VulkanNative");
-                file.WriteLine("\t{");
 
                 var commandDictionary = new List<string>();
                 foreach (var command in vulkanVersion.Commands)
                 {
                     string convertedType = Helpers.ConvertToBeefType(command.Prototype.Type, 0, vulkanSpec);
 
-                    //file.WriteLine("\t\t[UnmanagedFunctionPointer(CallConv)]");
-                    //file.WriteLine($"\t\t[CallingConvention(VulkanNative.CallConv)]");
+                    //file.WriteLine("\t[UnmanagedFunctionPointer(CallConv)]");
+                    //file.WriteLine($"\t[CallingConvention(VulkanNative.CallConv)]");
                     //public static extern Result vkCreateInstance(InstanceCreateInfo* pCreateInfo,AllocationCallbacks* pAllocator,Instance* pInstance);
-                    //file.WriteLine($"\t\tprivate static function {convertedType} {command.Prototype.Name}Function({command.GetParametersSignature(vulkanSpec)});");
-                    file.WriteLine($"\t\tpublic typealias {command.Prototype.Name}Function = function {convertedType}({command.GetParametersSignature(vulkanSpec)});");
+                    //file.WriteLine($"\tprivate static function {convertedType} {command.Prototype.Name}Function({command.GetParametersSignature(vulkanSpec)});");
+                    file.WriteLine($"\tpublic typealias {command.Prototype.Name}Function = function {convertedType}({command.GetParametersSignature(vulkanSpec)});");
 
                     // Delegate
-                    //file.WriteLine($"\t\tprivate delegate {convertedType} {command.Prototype.Name}Delegate({command.GetParametersSignature(vulkanSpec)});");
+                    //file.WriteLine($"\tprivate delegate {convertedType} {command.Prototype.Name}Delegate({command.GetParametersSignature(vulkanSpec)});");
 
                     // internal function
-                    file.WriteLine($"\t\tprivate static {command.Prototype.Name}Function {command.Prototype.Name}_ptr;");
+                    file.WriteLine($"\tprivate static {command.Prototype.Name}Function {command.Prototype.Name}_ptr;");
 
                     // public function
-                    file.WriteLine($"\t\t[CallingConvention(VulkanNative.CallConv)]");
-                    file.WriteLine($"\t\tpublic static {convertedType} {command.Prototype.Name}({command.GetParametersSignature(vulkanSpec)})");
-                    file.WriteLine($"\t\t\t=> {command.Prototype.Name}_ptr({command.GetParametersSignature(vulkanSpec, useTypes: false)});\n");
+                    file.WriteLine($"\t[CallingConvention(VulkanNative.CallConv)]");
+                    file.WriteLine($"\tpublic static {convertedType} {command.Prototype.Name}({command.GetParametersSignature(vulkanSpec)})");
+                    file.WriteLine($"\t\t=> {command.Prototype.Name}_ptr({command.GetParametersSignature(vulkanSpec, useTypes: false)});\n");
 
                     commandDictionary.Add($"\tcase \"{command.Prototype.Name}\":");
                     commandDictionary.Add($"\t\tmNativeLib.LoadFunction(\"{command.Prototype.Name}\", out {command.Prototype.Name}_ptr, invokeErrorCallback);");
@@ -365,72 +377,72 @@ namespace BulkanGen
                     commandDictionary.Add("");
                 }
 
-                file.WriteLine($"\t\tpublic static void SetInstance(VkInstance instance)");
-                file.WriteLine("\t\t{");
-                file.WriteLine("\t\t\tmNativeLib.mInstance = instance;");
-                file.WriteLine("\t\t}");
+                file.WriteLine($"\tpublic static void SetInstance(VkInstance instance)");
+                file.WriteLine("\t{");
+                file.WriteLine("\t\tmNativeLib.mInstance = instance;");
+                file.WriteLine("\t}");
                 file.WriteLine();
 
                 if (commandDictionary.Count > 0)
                 {
-                    file.WriteLine("\t\tpublic static Result<void> LoadFunction(StringView name, bool invokeErrorCallback = true)");
-                    file.WriteLine("\t\t{");
-                    file.WriteLine("\t\t\tswitch (name) {");
+                    file.WriteLine("\tpublic static Result<void> LoadFunction(StringView name, bool invokeErrorCallback = true)");
+                    file.WriteLine("\t{");
+                    file.WriteLine("\t\tswitch (name) {");
 
                     foreach (var commandItem in commandDictionary)
                     {
                         if (string.IsNullOrEmpty(commandItem))
                             file.WriteLine();
                         else
-                            file.WriteLine($"\t\t{commandItem}");
+                            file.WriteLine($"\t{commandItem}");
                     }
 
-                    file.WriteLine($"\t\t\tdefault:");
-                    file.WriteLine($"\t\t\t\tRuntime.FatalError(scope $\"Unknown function name '{{name}}'.\");");
-                    file.WriteLine("\t\t\t}");
-                    file.WriteLine("\t\t\treturn .Ok;");
+                    file.WriteLine($"\t\tdefault:");
+                    file.WriteLine($"\t\t\tRuntime.FatalError(scope $\"Unknown function name '{{name}}'.\");");
                     file.WriteLine("\t\t}");
+                    file.WriteLine("\t\treturn .Ok;");
+                    file.WriteLine("\t}");
                     file.WriteLine();
                 }
 
-                file.WriteLine($"\t\tpublic static Result<void, String> LoadFunctions(Span<String> functions, VkInstance? instance = null)");
-                file.WriteLine("\t\t{");
-                file.WriteLine("\t\t\tif(instance != null)");
-                file.WriteLine("\t\t\t\tSetInstance(instance.Value);");
+                file.WriteLine($"\tpublic static Result<void, String> LoadFunctions(Span<String> functions, VkInstance? instance = null)");
+                file.WriteLine("\t{");
+                file.WriteLine("\t\tif(instance != null)");
+                file.WriteLine("\t\t\tSetInstance(instance.Value);");
                 file.WriteLine();
-                file.WriteLine("\t\t\tfor (var func in functions)");
-                file.WriteLine("\t\t\t{");
-                file.WriteLine("\t\t\t\tif(LoadFunction(func) case .Err)");
-                file.WriteLine("\t\t\t\t\treturn .Err(func);");
-                file.WriteLine("\t\t\t}");
-                file.WriteLine("\t\t\treturn .Ok;");
+                file.WriteLine("\t\tfor (var func in functions)");
+                file.WriteLine("\t\t{");
+                file.WriteLine("\t\t\tif(LoadFunction(func) case .Err)");
+                file.WriteLine("\t\t\t\treturn .Err(func);");
                 file.WriteLine("\t\t}");
+                file.WriteLine("\t\treturn .Ok;");
+                file.WriteLine("\t}");
                 file.WriteLine();
 
-                file.WriteLine($"\t\tprivate static void LoadAllFuncions(VkInstance? instance = null, List<String> excludeFunctions = null)");
-                file.WriteLine("\t\t{");
-                file.WriteLine("\t\t\tif (instance != null)");
-                file.WriteLine("\t\t\t\tSetInstance(instance.Value);");
+                file.WriteLine($"\tprivate static void LoadAllFuncions(VkInstance? instance = null, List<String> excludeFunctions = null)");
+                file.WriteLine("\t{");
+                file.WriteLine("\t\tif (instance != null)");
+                file.WriteLine("\t\t\tSetInstance(instance.Value);");
                 file.WriteLine();
                 foreach (var command in vulkanVersion.Commands)
                 {
-                    file.WriteLine($"\t\t\tif(excludeFunctions == null || !excludeFunctions.Contains(\"{command.Prototype.Name}\"))");
-                    file.WriteLine($"\t\t\t\tLoadFunction(\"{command.Prototype.Name}\").IgnoreError();");
+                    file.WriteLine($"\t\tif(excludeFunctions == null || !excludeFunctions.Contains(\"{command.Prototype.Name}\"))");
+                    file.WriteLine($"\t\t\tLoadFunction(\"{command.Prototype.Name}\").IgnoreError();");
                     file.WriteLine();
                 }
 
-                file.WriteLine("\t\t}");
+                file.WriteLine("\t}");
 
 
                 file.WriteLine();
 
-                file.WriteLine($"\t\tpublic static void LoadFunction<T>(StringView name, out T funcPtr)");
-                file.WriteLine("\t\t{");
-                file.WriteLine("\t\t\tmNativeLib.LoadFunction(name, out funcPtr);");
-                file.WriteLine("\t\t}");
-
+                file.WriteLine($"\tpublic static void LoadFunction<T>(StringView name, out T funcPtr)");
+                file.WriteLine("\t{");
+                file.WriteLine("\t\tmNativeLib.LoadFunction(name, out funcPtr);");
                 file.WriteLine("\t}");
+
                 file.WriteLine("}");
+                //file.WriteLine("}");
             }
         }
     }
