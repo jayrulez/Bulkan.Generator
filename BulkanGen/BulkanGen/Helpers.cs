@@ -10,6 +10,8 @@ namespace BulkanGen
 {
     public static class Helpers
     {
+        public const string VK_SC = "vulkansc";
+
         public static string ToBeefType(this ConstantType type)
         {
             switch (type)
@@ -342,6 +344,13 @@ namespace BulkanGen
                 case "StdVideoEncodeH264ReferenceInfo":
                 case "StdVideoH264LevelIdc":
                 case "StdVideoH265LevelIdc":
+                case "NvSciSyncFence":
+                case "NvSciSyncObj":
+                case "StdVideoEncodeH264ReferenceListsInfo":
+                case "StdVideoEncodeH265ReferenceListsInfo":
+                case "NvSciSyncAttrList":
+                case "NvSciBufAttrList":
+                case "NvSciBufObj":
                 //Metal Layer
                 case "MTLDevice_id":
                 case "MTLCommandQueue_id":
@@ -349,20 +358,16 @@ namespace BulkanGen
                 case "MTLTexture_id":
                 case "MTLSharedEvent_id":
                 case "IOSurfaceRef":
-                // bulkan
-                //case "StdVideoH264Level":
-                //case "StdVideoH265Level":
-
-                case "NvSciBufObj":
-                case "NvSciBufAttrList":
-                case "NvSciSyncObj":
-                case "NvSciSyncAttrList":
-                case "NvSciSyncFence":
-                    // end bulkan
                     return true;
                 default:
                     return false;
             }
+        }
+
+        public static bool IsVKSC(string api)
+        {
+            // Check Vulkan Safety Critical
+            return !string.IsNullOrEmpty(api) && api.Equals(VK_SC);
         }
     }
 }

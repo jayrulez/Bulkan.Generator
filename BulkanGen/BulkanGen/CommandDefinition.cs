@@ -61,6 +61,12 @@ namespace BulkanGen
             StringBuilder signature = new StringBuilder();
             foreach (var p in Parameters)
             {
+                // Avoid Vulkan Safety Critical
+                if (Helpers.IsVKSC(p.Api))
+                {
+                    continue;
+                }
+
                 string convertedType = Helpers.GetPrettyEnumName(Helpers.ConvertToBeefType(p.Type, p.PointerLevel, spec));
                 string convertedName = Helpers.ValidatedName(p.Name);
 
@@ -95,6 +101,7 @@ namespace BulkanGen
 
         public string Type;
         public string Name;
+        public string Api;
         public int PointerLevel;
         public bool IsOptional;
         public string Externsync;
@@ -108,6 +115,7 @@ namespace BulkanGen
             Param p = new Param();
             p.Type = elem.Element("type").Value;
             p.Name = elem.Element("name").Value;
+            p.Api = elem.Attribute("api")?.Value;
             p.Externsync = elem.Attribute("externsync")?.Value;
             p.Len = elem.Attribute("len")?.Value;
             p.IsNoautovalidity = elem.Attribute("noautovalidity")?.Value == "true";
