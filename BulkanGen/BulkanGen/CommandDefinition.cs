@@ -16,6 +16,7 @@ namespace BulkanGen
         public string[] SuccessCodes;
         public string[] ErrorCodes;
         public string Comment;
+        public bool IsInstanceCommand;
 
         public static CommandDefinition FromXML(XElement elem)
         {
@@ -50,7 +51,10 @@ namespace BulkanGen
 
                 names.Add(name);
 
-                command.Parameters.Add(Param.FromXML(param));
+                var parsed = Param.FromXML(param);
+                if(parsed.Name == "instance" && parsed.Type == "VkInstance")
+                    command.IsInstanceCommand = true;
+                command.Parameters.Add(parsed);
             }
 
             return command;

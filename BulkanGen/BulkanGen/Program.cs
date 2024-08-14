@@ -354,8 +354,12 @@ namespace BulkanGen
                 file.WriteLine("{");
 
                 var commandDictionary = new List<string>();
+                var instanceCommands = new List<string>();
                 foreach (var command in vulkanVersion.Commands)
                 {
+                    if (command.IsInstanceCommand)
+                        instanceCommands.Add(command.Prototype.Name);
+
                     string convertedType = Helpers.ConvertToBeefType(command.Prototype.Type, 0, vulkanSpec);
 
                     //file.WriteLine("\t[UnmanagedFunctionPointer(CallConv)]");
@@ -376,23 +380,71 @@ namespace BulkanGen
                     file.WriteLine($"\t\t=> {command.Prototype.Name}_ptr({command.GetParametersSignature(vulkanSpec, useTypes: false)});\n");
 
                     commandDictionary.Add($"\tcase \"{command.Prototype.Name}\":");
-                    commandDictionary.Add($"\t\tmNativeLib.LoadFunction(\"{command.Prototype.Name}\", out {command.Prototype.Name}_ptr, invokeErrorCallback);");
+                    commandDictionary.Add($"\t\tLoadFunction(\"{command.Prototype.Name}\", out {command.Prototype.Name}_ptr, instance, invokeErrorCallback);");
                     commandDictionary.Add($"\t\tif({command.Prototype.Name}_ptr == null)");
                     commandDictionary.Add($"\t\t\treturn .Err;");
                     commandDictionary.Add($"\t\tbreak;");
                     commandDictionary.Add("");
                 }
 
-                file.WriteLine($"\tpublic static void SetInstance(VkInstance instance)");
+                Func<String, String> getGroup = (name) =>
+                {
+                    if (name.Contains("Xlib"))
+                        return "Xlib";
+                    if (name.Contains("Xcb"))
+                        return "Xcb";
+                    if (name.Contains("Wayland"))
+                        return "Wayland";
+                    if (name.Contains("Android"))
+                        return "Android";
+                    if (name.Contains("Win32"))
+                        return "Win32";
+                    if (name.Contains("GGP"))
+                        return "GGP";
+                    if (name.Contains("NN"))
+                        return "NN";
+                    if (name.Contains("MVK"))
+                        return "MVK";
+                    if (name.Contains("FUCHSIA"))
+                        return "FUCHSIA";
+                    if (name.Contains("QNX"))
+                        return "QNX";
+                    if (name.Contains("Metal"))
+                        return "Metal";
+                    if (name.Contains("DirectFB"))
+                        return "DirectFB";
+                    if (name.Contains("Headless"))
+                        return "Headless";
+                    return "Agnostic";
+                };
+
+                var instanceCommandGroups = instanceCommands.GroupBy(c => getGroup(c)).ToList();
+
+                file.WriteLine();
+
+                file.WriteLine("\tprivate static List<(InstanceFunctionFlags Flags, String Name)> sKnownInstanceCommands = new .()");
                 file.WriteLine("\t{");
-                file.WriteLine("\t\tmNativeLib.mInstance = instance;");
-                file.WriteLine("\t}");
+                foreach(var group in instanceCommandGroups)
+                {
+                    foreach(var instanceCommand in group)
+                    {
+                        file.WriteLine($"\t\t(.{group.Key}, \"{instanceCommand}\"),");
+                    }
+                }
+                file.WriteLine("\t} ~ delete _;");
                 file.WriteLine();
 
                 if (commandDictionary.Count > 0)
                 {
-                    file.WriteLine("\tpublic static Result<void> LoadFunction(StringView name, bool invokeErrorCallback = true)");
+                    file.WriteLine("\tpublic static Result<void> LoadFunction(StringView name, VkInstance? instance = null, bool invokeErrorCallback = true)");
                     file.WriteLine("\t{");
+
+                    file.WriteLine("\t\tif(mLoadedFunctions.Contains(scope .(name)))");
+                    file.WriteLine("\t\t{");
+                    file.WriteLine("\t\t\treturn .Ok;");
+                    file.WriteLine("\t\t}");
+                    file.WriteLine();
+
                     file.WriteLine("\t\tswitch (name) {");
 
                     foreach (var commandItem in commandDictionary)
@@ -411,40 +463,15 @@ namespace BulkanGen
                     file.WriteLine();
                 }
 
-                file.WriteLine($"\tpublic static Result<void, String> LoadFunctions(Span<String> functions, VkInstance? instance = null)");
-                file.WriteLine("\t{");
-                file.WriteLine("\t\tif(instance != null)");
-                file.WriteLine("\t\t\tSetInstance(instance.Value);");
-                file.WriteLine();
-                file.WriteLine("\t\tfor (var func in functions)");
-                file.WriteLine("\t\t{");
-                file.WriteLine("\t\t\tif(LoadFunction(func) case .Err)");
-                file.WriteLine("\t\t\t\treturn .Err(func);");
-                file.WriteLine("\t\t}");
-                file.WriteLine("\t\treturn .Ok;");
-                file.WriteLine("\t}");
-                file.WriteLine();
-
                 file.WriteLine($"\tprivate static void LoadAllFuncions(VkInstance? instance = null, List<String> excludeFunctions = null)");
                 file.WriteLine("\t{");
-                file.WriteLine("\t\tif (instance != null)");
-                file.WriteLine("\t\t\tSetInstance(instance.Value);");
-                file.WriteLine();
                 foreach (var command in vulkanVersion.Commands)
                 {
                     file.WriteLine($"\t\tif(excludeFunctions == null || !excludeFunctions.Contains(\"{command.Prototype.Name}\"))");
-                    file.WriteLine($"\t\t\tLoadFunction(\"{command.Prototype.Name}\").IgnoreError();");
+                    file.WriteLine($"\t\t\tLoadFunction(\"{command.Prototype.Name}\", instance).IgnoreError();");
                     file.WriteLine();
                 }
 
-                file.WriteLine("\t}");
-
-
-                file.WriteLine();
-
-                file.WriteLine($"\tpublic static void LoadFunction<T>(StringView name, out T funcPtr)");
-                file.WriteLine("\t{");
-                file.WriteLine("\t\tmNativeLib.LoadFunction(name, out funcPtr);");
                 file.WriteLine("\t}");
 
                 file.WriteLine("}");
