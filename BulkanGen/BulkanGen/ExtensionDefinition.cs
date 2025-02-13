@@ -79,7 +79,7 @@ namespace BulkanGen
                             if (bitPosString != null)
                             {
                                 int shift = int.Parse(bitPosString);
-                                valueString = (1 << shift).ToString();
+                                valueString = ((nuint)1 << shift).ToString();
                             }
                             else
                             {

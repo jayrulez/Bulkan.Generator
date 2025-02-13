@@ -100,31 +100,74 @@ namespace BulkanGen
 
                 foreach (var e in vulkanVersion.Enums)
                 {
+                    var typeDefs = vulkanSpec.TypeDefs;
+                    var baseTypes = vulkanSpec.BaseTypes;
+
+                    string underlyingType = "int32";
+
+                    var prettyName = Helpers.GetPrettyEnumName(e.Name);
+
+                    var typeDef = vulkanSpec.TypeDefs.FirstOrDefault(td => td.Name == prettyName);
+
+                    if (typeDef != null)
+                    {
+                        switch (typeDef.Type)
+                        {
+                            case "VkSampleMask":
+                                underlyingType = "uint32";
+                                break;
+                            case "VkBool32":
+                                underlyingType = "uint32";
+                                break;
+                            case "VkFlags":
+                                underlyingType = "uint32";
+                                break;
+                            case "VkFlags64":
+                                underlyingType = "uint64";
+                                break;
+                            case "VkDeviceSize":
+                                underlyingType = "uint64";
+                                break;
+                            case "VkDeviceAddress":
+                                underlyingType = "uint64";
+                                break;
+
+                            default:
+                                throw new Exception("Unexpected typedef, see vk.xml from Khronos registry.");
+                        }
+                    }
+
                     var prettyMembers = new StringWriter();
 
                     //if (e.Type == EnumType.Bitmask)
                     //    file.WriteLine("[Flags]");
                     file.WriteLine($"[AllowDuplicates]");
-                    string underlyingType = "uint32";
-                    if (Helpers.GetPrettyEnumName(e.Name).Equals("VkResult")
-                        || Helpers.GetPrettyEnumName(e.Name).Equals("VkFormatFeatureFlags2")
-                        || Helpers.GetPrettyEnumName(e.Name).Equals("VkFormatFeatureFlags2KHR")
-                        || Helpers.GetPrettyEnumName(e.Name).Equals("VkQueryResultStatusKHR")
-                        || Helpers.GetPrettyEnumName(e.Name).Equals("VkOpacityMicromapSpecialIndexEXT"))
-                    {
-                        underlyingType = "int32";
-                    }
-                    file.WriteLine($"public enum {Helpers.GetPrettyEnumName(e.Name)} : {underlyingType}");
+                    //if (prettyName.Equals("VkResult")
+                    //    || prettyName.Equals("VkFormatFeatureFlags2")
+                    //    || prettyName.Equals("VkFormatFeatureFlags2KHR")
+                    //    || prettyName.Equals("VkQueryResultStatusKHR")
+                    //    || prettyName.Equals("VkOpacityMicromapSpecialIndexEXT"))
+                    //{
+                    //    underlyingType = "int32";
+                    //}
+                    file.WriteLine($"public enum {prettyName} : {underlyingType}");
                     file.WriteLine("{");
 
                     if (!(e.Values.Exists(v => v.Value == 0)))
                     {
                         file.WriteLine("\tNone = 0,");
                     }
-
                     foreach (var member in e.Values)
                     {
-                        file.WriteLine($"\t{member.Name} = {member.Value},");
+                        if (string.IsNullOrEmpty(member.HexValueString))
+                        {
+                            // {(member.Value < 0 && underlyingType != "int32" ? "(" + underlyingType + ")" : "")}
+                            file.WriteLine($"\t{member.Name} = {member.Value},");
+                        }
+                        else
+                        {
+                            file.WriteLine($"\t{member.Name} = {member.HexValueString},");
+                        }
                         var prettyMemberName = Helpers.GetPrettyEnumValue(e.Name, member.Name);
                         prettyMembers.WriteLine($"\t{prettyMemberName} = .{member.Name},");
                     }
@@ -424,10 +467,20 @@ namespace BulkanGen
 
                 file.WriteLine("\tprivate static List<(InstanceFunctionFlags Flags, String Name)> sKnownInstanceCommands = new .()");
                 file.WriteLine("\t{");
-                foreach(var group in instanceCommandGroups)
+                foreach (var group in instanceCommandGroups)
                 {
-                    foreach(var instanceCommand in group)
+                    foreach (var instanceCommand in group)
                     {
+                        // Exclude these as they are only available if validation layer is enabled
+                        if (new List<string>() {
+                            "vkCreateDebugReportCallbackEXT",
+                            "vkDestroyDebugReportCallbackEXT",
+                            "vkDebugReportMessageEXT",
+                            "vkCreateDebugUtilsMessengerEXT",
+                            "vkDestroyDebugUtilsMessengerEXT",
+                            "vkSubmitDebugUtilsMessageEXT",
+                        }.Contains(instanceCommand))
+                            continue;
                         file.WriteLine($"\t\t(.{group.Key}, \"{instanceCommand}\"),");
                     }
                 }

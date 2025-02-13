@@ -99,7 +99,8 @@ namespace BulkanGen
                         {
                             EnumValue newValue = new EnumValue();
                             newValue.Name = enumType.Name;
-                            newValue.Value = int.Parse(enumType.Value);
+                            newValue.HexValueString = enumType.Value;
+                            newValue.Value = nint.Parse(enumType.Value);
                             enumDefinition.Values.Add(newValue);
                         }
                     }

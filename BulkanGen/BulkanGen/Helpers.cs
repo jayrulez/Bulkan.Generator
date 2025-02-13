@@ -329,6 +329,10 @@ namespace BulkanGen
                 case "StdVideoDecodeH264Mvc":
                 case "StdVideoH265SequenceParameterSet":
                 case "StdVideoH265PictureParameterSet":
+                case "StdVideoEncodeAV1DecoderModelInfo":
+                case "StdVideoEncodeAV1OperatingPointInfo":
+                case "StdVideoEncodeAV1ReferenceInfo":
+                case "StdVideoEncodeAV1PictureInfo":
                 case "StdVideoDecodeH265PictureInfo":
                 case "StdVideoDecodeH265ReferenceInfo":
                 case "StdVideoEncodeH264PictureInfo":

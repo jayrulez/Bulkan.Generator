@@ -34,7 +34,8 @@ namespace BulkanGen
     {
         public string Name;
         public string Alias;
-        public int Value;
+        public nint Value;
+        public string HexValueString;
         public string Comment;
 
         internal static EnumValue FromXML(XElement elem)
@@ -49,18 +50,20 @@ namespace BulkanGen
             {
                 if (valueString.StartsWith("0x"))
                 {
+                    enumValue.HexValueString = valueString.TrimEnd('U', 'L'); ;
                     valueString = valueString.Substring(2);
-                    enumValue.Value = int.Parse(valueString, System.Globalization.NumberStyles.HexNumber);
+                    enumValue.Value = nint.Parse(valueString, System.Globalization.NumberStyles.HexNumber);
                 }
                 else
                 {
-                    enumValue.Value = int.Parse(valueString);
+                    enumValue.Value = nint.Parse(valueString);
                 }
             }
             else if (enumValue.Alias == null)
             {
                 string bitpos = elem.Attribute("bitpos").Value;
-                enumValue.Value = 1 << int.Parse(bitpos);
+                enumValue.Value = ((nint)1) << int.Parse(bitpos);
+                //enumValue.HexValueString = enumValue.Value.ToString("X");
             }
 
             //Console.WriteLine($"{enumValue.Name}:{valueString}:{enumValue.Value}");
