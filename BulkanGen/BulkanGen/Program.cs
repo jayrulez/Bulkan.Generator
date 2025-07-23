@@ -456,6 +456,8 @@ namespace BulkanGen
                         return "Metal";
                     if (name.Contains("DirectFB"))
                         return "DirectFB";
+                    if (name.Contains("OHOS"))
+                        return "OHOS";
                     if (name.Contains("Headless"))
                         return "Headless";
                     return "Agnostic";
@@ -473,12 +475,12 @@ namespace BulkanGen
                     {
                         // Exclude these as they are only available if validation layer is enabled
                         if (new List<string>() {
-                            "vkCreateDebugReportCallbackEXT",
-                            "vkDestroyDebugReportCallbackEXT",
-                            "vkDebugReportMessageEXT",
-                            "vkCreateDebugUtilsMessengerEXT",
-                            "vkDestroyDebugUtilsMessengerEXT",
-                            "vkSubmitDebugUtilsMessageEXT",
+                            //"vkCreateDebugReportCallbackEXT",
+                            //"vkDestroyDebugReportCallbackEXT",
+                            //"vkDebugReportMessageEXT",
+                            //"vkCreateDebugUtilsMessengerEXT",
+                            //"vkDestroyDebugUtilsMessengerEXT",
+                            //"vkSubmitDebugUtilsMessageEXT",
                         }.Contains(instanceCommand))
                             continue;
                         file.WriteLine($"\t\t(.{group.Key}, \"{instanceCommand}\"),");
