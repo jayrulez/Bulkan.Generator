@@ -11,7 +11,7 @@ namespace BulkanGen
         static void Main(string[] args)
         {
             string vkFile = "..\\..\\..\\..\\..\\KhronosRegistry\\vk.xml";
-            string outputPath = "..\\..\\..\\..\\..\\Bulkan\\Bulkan\\src\\Generated";
+            string outputPath = "..\\..\\..\\..\\..\\Bulkan\\src\\Generated";
             string projectNamespace = "Bulkan";
 
             var vulkanSpec = VulkanSpecification.FromFile(vkFile);
