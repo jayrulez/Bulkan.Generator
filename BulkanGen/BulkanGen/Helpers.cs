@@ -371,6 +371,8 @@ public static class Helpers
             case "IOSurfaceRef":
             // OH
             case "OHNativeWindow":
+            case "OHBufferHandle":
+            case "OH_NativeBuffer":
                 return true;
             default:
                 return false;
